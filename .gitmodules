@@ -1,0 +1,6 @@
+[submodule "medicate-ui"]
+	path = medicate-ui
+	url = git@github.com:gertjana/medicate-ui.git
+[submodule "medicate-zio"]
+	path = medicate-zio
+	url = git@github.com:gertjana/medicate-zio.git
