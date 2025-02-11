@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medicate-ui
+  namespace: medicate
+  labels:
+    app: medicate-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: medicate-ui
+  template:
+    metadata:
+      labels:
+        app: medicate-ui
+    spec:
+      containers:
+      - name: medicate-ui
+        image: major7/medicate-ui:1.0
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "100m"
+          limits:
+            memory: "48Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medicate-ui
+  namespace: medicate
+spec:
+  selector:
+    app: medicate-ui
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: medicate-ui
+  namespace: medicate
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+              name: medicate-ui
+            port:
+              number: 80 

@@ -1,0 +1,38 @@
+# Stage 1: Build Elm frontend
+FROM sbtscala/scala-sbt:eclipse-temurin-23.0.1_11_1.10.7_3.6.3 AS backend-builder
+WORKDIR /app
+# Copy backend source files
+COPY medicate-zio/build.sbt .
+COPY medicate-zio/project ./project
+COPY medicate-zio/src ./src
+
+# Build the fat JAR
+RUN sbt assembly
+
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app
+
+COPY medicate-ui/ .
+RUN npm install -g elm elm-land
+RUN rm -fr dist
+RUN elm-land build
+
+# Stage 3: Final runtime image
+FROM eclipse-temurin:23-jre-alpine
+WORKDIR /app
+
+RUN apk update && \
+    apk add --no-cache \
+    lighttpd \
+    openssl \
+    curl && \
+    rm -rf /var/cache/apk/*
+
+COPY --from=backend-builder /app/target/scala-3.3.4/*.jar ./medicate-zio.jar
+COPY --from=frontend-builder /app/dist /var/www/localhost/htdocs
+COPY run.sh .
+
+RUN chmod +x run.sh
+EXPOSE 8080 80
+
+CMD ["./run.sh"]
